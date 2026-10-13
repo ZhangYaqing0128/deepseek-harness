@@ -50,14 +50,17 @@ export class ToolResultPruner extends Service {
     thresholdChars: z.number().step(1).min(1).default(DEFAULTS.thresholdChars),
     headChars: z.number().step(1).min(0).default(DEFAULTS.headChars),
     tailChars: z.number().step(1).min(0).default(DEFAULTS.tailChars),
+    whitelist: z.array(z.string()).nonempty().default([...DEFAULT_WHITELIST]),
   })
 
   /** Resolved and immutable character budgets. */
   readonly config: ResolvedConfig
+  readonly whitelist: ReadonlySet<string>
 
   constructor(ctx: Context, config: ToolResultPruneConfig = {}) {
     super(ctx, 'toolResultPruner')
     this.config = resolveConfig(config)
+    this.whitelist = new Set(config.whitelist ?? DEFAULT_WHITELIST)
   }
 
   /**
@@ -139,7 +142,7 @@ export class ToolResultPruner extends Service {
       // oxlint-disable-next-line typescript/no-deprecated -- Existing Session history read; migration deferred.
       const event = session.eventAt(seq)
       /* v8 ignore next -- surface seqs are validated contiguous log references. */
-      if (event?.type === 'tool/result') candidates.push({ seq, event })
+      if (event && this.whitelist.has(event.type)) candidates.push({ seq, event })
     }
 
     const pruned: PrunedEntry[] = []

@@ -17,6 +17,7 @@ const CONFIG_KEYS: ReadonlySet<string> = new Set([
   'thresholdChars',
   'headChars',
   'tailChars',
+  'whitelist',
 ])
 
 /**
